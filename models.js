@@ -14,7 +14,7 @@
 */
 const Models = (function () {
   const URLS = [
-    '/strikezone/models/soldier.glb',
+    'models/soldier.glb',
     'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/gltf/Soldier.glb',
     'https://threejs.org/examples/models/gltf/Soldier.glb',
     'https://raw.githubusercontent.com/mrdoob/three.js/r128/examples/models/gltf/Soldier.glb'
