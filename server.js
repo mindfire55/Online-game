@@ -21,7 +21,7 @@ const origin = process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(','
 const io = new Server(server, { cors: { origin: origin, methods: ['GET', 'POST'] }, pingInterval: 10000, pingTimeout: 15000 });
 
 /* the whole game folder is served too, so one command runs everything locally */
-const gameDir = path.join(__dirname, '..');
+const gameDir = __dirname;
 app.use('/strikezone', express.static(gameDir, { index: 'index.html', setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
 app.get('/', (req, res) => res.redirect('/strikezone/index.html'));
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime(), modes: Object.keys(MODES), maps: MAPS.map((m) => m.name) }));
