@@ -1,0 +1,13 @@
+# Render blueprint: https://render.com  (New + > Blueprint, point it at your repo)
+services:
+  - type: web
+    name: strikezone-server
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: ALLOWED_ORIGIN
+        value: https://YOUR-GITHUB-USERNAME.github.io

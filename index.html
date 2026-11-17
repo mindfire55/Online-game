@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Strike Zone</title>
+  <!-- LINK 1: stylesheet (folder must be named strikezone) -->
+  <link rel="stylesheet" href="/strikezone/style.css">
+  <!-- LINK 1b: online multiplayer styles -->
+  <link rel="stylesheet" href="/strikezone/mp.css">
+  <link rel="icon" href="data:,">
+  <!-- optional nicer fonts (the game still works without internet; it then uses your system fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap">
+</head>
+<body>
+
+  <!-- 3D game is drawn on this canvas by game.js -->
+  <canvas id="game-canvas"></canvas>
+  <div id="fx-vignette"></div>
+  <div id="fx-grain"></div>
+
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hidden">
+    <div id="crosshair"><i class="ch t"></i><i class="ch b"></i><i class="ch l"></i><i class="ch r"></i><i class="dot"></i></div>
+    <div id="hitmarker"></div>
+    <div id="headshot-text">HEADSHOT!</div>
+    <div id="damage-vignette"></div>
+    <div id="damage-dir"><span></span></div>
+    <div id="scope-overlay"><div class="sv"></div><div class="sh"></div></div>
+
+    <div id="top-left">
+      <canvas id="minimap" width="150" height="150"></canvas>
+      <div id="hud-user"></div>
+      <div id="hud-map"></div>
+      <div id="hud-pov"></div>
+    </div>
+
+    <div id="top-right">
+      <div class="stat"><span>KILLS</span><b id="s-kills">0</b></div>
+      <div class="stat"><span>BEST RUN</span><b id="s-best">0</b></div>
+      <div class="stat"><span>ALL-TIME KILLS</span><b id="s-total">0</b></div>
+      <div class="stat"><span>HEADSHOTS</span><b id="s-hs">0</b></div>
+      <div class="stat coin"><span>COINS</span><b id="s-coins">0</b></div>
+    </div>
+
+    <div id="killfeed"></div>
+    <div id="headshot-flash"></div>
+    <div id="hint"></div>
+    <div id="reload-bar"><i></i></div>
+
+    <div id="bottom-left">
+      <div id="hp-label">HEALTH <b id="hp-text">100</b></div>
+      <div id="hp-bar"><div id="hp-fill"></div></div>
+    </div>
+
+    <div id="slots">
+      <div class="slot" data-slot="0"><em>1</em><span></span></div>
+      <div class="slot" data-slot="1"><em>2</em><span></span></div>
+      <div class="slot" data-slot="2"><em>3</em><span></span></div>
+      <div class="slot" data-slot="3"><em>4</em><span></span></div>
+    </div>
+
+    <div id="ammo">
+      <div id="ammo-name">AK-47</div>
+      <div id="ammo-count"><b id="ammo-mag">30</b><small id="ammo-res"> / 90</small></div>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN MENU ===================== -->
+  <div id="menu" class="screen">
+    <div class="panel menu-panel">
+      <h1>STRIKE <span>ZONE</span></h1>
+      <p class="tag">Tactical Shooter &bull; 4 Maps &bull; Vending-Machine Armory</p>
+
+      <div class="row row-name">
+        <label for="username">USERNAME</label>
+        <input id="username" type="text" maxlength="16" placeholder="Enter your name" autocomplete="off">
+      </div>
+
+      <div class="row row-char">
+        <label>SELECT CHARACTER</label>
+        <div id="char-list"></div>
+      </div>
+
+      <div class="feat" id="feat">
+        <div class="feat-h">ROUND GOALS <small id="feat-best"></small></div>
+        <div class="feat-g"><span>&#127919; Beat your best score</span><span>&#9889; 10+ kills in 2:00</span><span>&#128128; 3 headshots</span></div>
+        <div class="feat-a"><span><b>Z</b> Dodge</span><span><b>Shift</b> Sprint</span><span><b>C</b> Slide</span><span><b>G</b> Grenade</span><span><b>Space</b> Climb</span></div>
+      </div>
+
+      <div class="row row-map">
+        <label>SELECT MAP</label>
+        <div id="map-list"></div>
+      </div>
+
+      <div class="row two">
+        <div>
+          <label for="quality">GRAPHICS</label>
+          <select id="quality">
+            <option value="ultra">Ultra (best looking)</option>
+            <option value="high">High (shadows, sharp)</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low (fast PCs)</option>
+          </select>
+        </div>
+        <div>
+          <label for="sens">MOUSE SENSITIVITY</label>
+          <input id="sens" type="range" min="0.3" max="2.5" step="0.1" value="1">
+        </div>
+      </div>
+
+      <div class="brief"><span><b>2:00</b> SCORE ATTACK</span><span>Loadout: <b>PISTOL</b> (buy more in store)</span><span>Enemies: <b>ONE-HIT</b></span><span>Auto-fire <b>ON</b></span><div class="tip" id="tip"></div></div>
+
+      <button id="btn-play" class="btn big">PLAY</button>
+      <button id="btn-settings" class="btn wide">SETTINGS (sound, VFX, controls, HUD)</button>
+
+      <details id="menu-more" class="menu-more">
+      <summary>LEADERBOARD &amp; CONTROLS</summary>
+      <div class="menu-cols">
+        <div class="box">
+          <h3>LEADERBOARD <small>(this browser)</small></h3>
+          <table id="board"><thead><tr><th>#</th><th>Player</th><th>Best 2:00 score</th><th>All kills</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="box">
+          <h3>CONTROLS</h3>
+          <ul class="keys">
+            <li><b>W A S D</b> move &nbsp; <b>Shift</b> sprint &nbsp; <b>Space</b> jump</li>
+            <li><b>Mouse</b> aim &nbsp; <b>Left click</b> fire &nbsp; <b>Right click</b> aim/zoom</li>
+            <li><b>1 / 2</b> guns &nbsp; <b>3</b> pistol/knife &nbsp; <b>4</b> melee &nbsp; <b>Wheel</b> cycle</li>
+            <li><b>R</b> reload &nbsp; <b>V</b> change POV &nbsp; <b>C</b> crouch &nbsp; <b>O</b> settings &nbsp; <b>Tab</b> stats</li>
+            <li><b>2:00 SCORE ATTACK</b> - score as much as you can in 2 minutes, the round ends at 0:00</li>
+            <li><b>Auto-fire</b>: your gun fires by itself when the crosshair is on an enemy (touch: joystick + look pad, buttons on the right)</li>
+            <li><b>Z</b> slide / dodge bullets &nbsp; <b>Shift + C</b> slide &nbsp; <b>G</b> throw grenade</li>
+            <li><b>Space</b> at a crate or low wall = climb over it</li>
+            <li><b>B</b> open store (or <b>E</b> at a vending machine)</li>
+            <li class="note">All keys can be changed in Settings</li>
+            <li><b>Esc</b> pause &nbsp; Green pads heal you</li>
+            <li><b>Training area</b> (blue circle on minimap): no enemies, free practice dummies</li>
+          </ul>
+        </div>
+      </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ===================== STORE / VENDING MACHINE ===================== -->
+  <div id="store" class="screen hidden">
+    <div class="panel store-panel">
+      <div class="store-head">
+        <h2>WEAPON VENDING MACHINE</h2>
+        <div class="coins">COINS: <b id="store-coins">0</b></div>
+        <button id="store-close" class="btn small">CLOSE (B)</button>
+      </div>
+      <div id="store-tabs">
+        <button data-tab="guns" class="tab active">Guns</button>
+        <button data-tab="side" class="tab">Pistols &amp; Knives</button>
+        <button data-tab="melee" class="tab">Melee</button>
+        <button data-tab="supplies" class="tab">Supplies</button>
+      </div>
+      <div id="store-note">Slots: 1 &amp; 2 = guns &bull; 3 = pistol or knife &bull; 4 = melee. Earn coins by eliminating enemies.</div>
+      <div id="store-grid"></div>
+    </div>
+  </div>
+
+  <!-- ===================== PAUSE ===================== -->
+  <div id="pause" class="screen hidden">
+    <div class="panel small-panel">
+      <h2>PAUSED</h2>
+      <button id="btn-resume" class="btn big">RESUME</button>
+      <button id="btn-pause-settings" class="btn">SETTINGS</button>
+      <button id="btn-quit" class="btn">QUIT TO MENU</button>
+    </div>
+  </div>
+
+  <!-- ===================== SETTINGS ===================== -->
+  <div id="settings" class="screen hidden">
+    <div class="panel settings-panel">
+      <div class="store-head">
+        <h2>SETTINGS</h2>
+        <button id="settings-close" class="btn small">DONE</button>
+      </div>
+      <div id="settings-tabs">
+        <button data-stab="audio" class="tab active">Audio</button>
+        <button data-stab="graphics" class="tab">Graphics &amp; VFX</button>
+        <button data-stab="controls" class="tab">Controls</button>
+        <button data-stab="hud" class="tab">HUD</button>
+      </div>
+      <div id="settings-body"></div>
+    </div>
+  </div>
+
+  <!-- ===================== GAME OVER ===================== -->
+  <div id="gameover" class="screen hidden">
+    <div class="panel small-panel">
+      <h2 id="go-title" class="red">YOU WERE ELIMINATED</h2>
+      <div id="go-stats"></div>
+      <button id="btn-again" class="btn big">PLAY AGAIN</button>
+      <button id="btn-menu" class="btn">MAIN MENU</button>
+    </div>
+  </div>
+
+  <!-- ===================== SCRIPTS =====================
+       ORDER MATTERS. Each file uses things from the files above it.
+       three.js comes from the internet (CDN), the other 4 are your own files
+       and live in the strikezone folder. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- loaders for the realistic animated character model (if they fail to load the game uses the built-in soldiers) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+  <script src="/strikezone/audio.js"></script>
+  <script src="/strikezone/weapons.js"></script>
+  <script src="/strikezone/maps.js"></script>
+  <script src="/strikezone/vfx.js"></script>
+  <script src="/strikezone/models.js"></script>
+  <script src="/strikezone/match.js"></script>
+  <script src="/strikezone/ui.js"></script>
+  <script src="/strikezone/game.js"></script>
+  <!-- online multiplayer: server address, then the lobby / HUD / results code (after game.js) -->
+  <script src="/strikezone/config.js"></script>
+  <script src="/strikezone/mp.js"></script>
+</body>
+</html>
