@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Strike Zone</title>
   <!-- LINK 1: stylesheet (folder must be named strikezone) -->
   <link rel="stylesheet" href="style.css">
@@ -219,7 +222,7 @@
   <script src="game.js"></script>
   <!-- online multiplayer: server address, then the lobby / HUD / results code (after game.js) -->
   <script src="config.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
   <script src="mp.js"></script>
+  <script src="fullscreen.js"></script>
 </body>
 </html>
