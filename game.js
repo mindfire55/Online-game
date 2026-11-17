@@ -703,7 +703,7 @@
   function rebuildHeld() {
     const id = curId();
     if (!id || !viewRoot) return;
-    if (viewModel) viewRoot.remove(viewModel);
+    for (let i = viewRoot.children.length - 1; i >= 0; i--) { if (viewRoot.children[i] !== viewArms) viewRoot.remove(viewRoot.children[i]); }   // drop every old gun model, keep only the hands
     viewModel = makeWeaponModel(id);
     viewRoot.add(viewModel);
     const w = WEAPONS[id];
@@ -959,6 +959,9 @@
       camera.fov = BASE_FOV; camera.updateProjectionMatrix();
 
       // first-person weapon holder (a child of the camera)
+      if (viewRoot && viewRoot.parent) viewRoot.parent.remove(viewRoot);   // remove the previous match's weapon + hands (they were left on the camera)
+      if (player && player.group && player.group.parent) player.group.parent.remove(player.group);
+      viewModel = null; tppWeapon = null;
       viewRoot = new THREE.Group();
       viewArms = buildViewArms(CHARS[SET.char].outfit);
       viewRoot.add(viewArms);
@@ -2602,7 +2605,7 @@
     let hint = '';
     if (G.healing) hint = 'Healing...';
     else if (G.trainHintT > 0) hint = 'TRAINING AREA - no enemies here, dummies respawn, kills are not scored';
-    else if (nearVending()) hint = 'Press E to open the weapon vending machine';
+    else if (nearVending()) hint = TOUCH ? '' : 'Press E to open the weapon vending machine';
     if (hint) { setText(HUD.hint, hint); if (!G.hintOn) { HUD.hint.classList.add('on'); G.hintOn = true; } }
     else if (G.hintOn) { HUD.hint.classList.remove('on'); G.hintOn = false; }
   }
