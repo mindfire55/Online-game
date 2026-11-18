@@ -83,16 +83,16 @@
   const CHARS = [
     { name: 'GHOST', role: 'Woodland Recon', outfit: {
       shirt: 0x4b5a3a, pants: 0x3a4030, vest: 0x2a2e24, helmet: 0x2f3a2a, skin: 0xd9a679, camo: [0x4b5a3a, 0x2f3b2c, 0x6b5a3c],
-      hat: 'helmet', mask: false, gaiter: true, maskColor: 0x2b3326, goggles: false, nvg: true, paint: 0x1f2a18, stubble: true, hairStyle: 'short', hair: 0x2a1d14, eye: 0x3f7a45, pack: true, glove: 0x1a1a1a, accent: 0x6fae4a } },
+      kit: 'ghillie', shape: { tw: 1.0, td: 1.0, lg: 1.02, th: 0.95, hd: 1.0 }, hat: 'helmet', mask: false, gaiter: true, maskColor: 0x2b3326, goggles: false, nvg: true, paint: 0x1f2a18, stubble: true, hairStyle: 'short', hair: 0x2a1d14, eye: 0x3f7a45, pack: true, glove: 0x1a1a1a, accent: 0x6fae4a } },
     { name: 'DESERT HAWK', role: 'Desert Assault', outfit: {
       shirt: 0xb59a6a, pants: 0x9a8458, vest: 0x6b5a3c, helmet: 0xa88f5d, skin: 0xb98259, camo: [0xb59a6a, 0x8a7348, 0x6b5a3c],
-      hat: 'cap', mask: false, gaiter: true, maskColor: 0xc2ad82, goggles: false, gogglesUp: true, beard: true, hairStyle: 'short', hair: 0x1b130d, eye: 0x5a3a1c, pack: false, glove: 0x3a3426, accent: 0xffc14d } },
+      kit: 'heavy', heavy: true, shape: { tw: 1.2, td: 1.16, lg: 0.94, th: 1.2, hd: 1.07 }, hat: 'cap', mask: false, gaiter: false, maskColor: 0xc2ad82, goggles: false, gogglesUp: true, beard: true, hairStyle: 'short', hair: 0x1b130d, eye: 0x5a3a1c, pack: false, glove: 0x3a3426, accent: 0xffc14d } },
     { name: 'ARCTIC WOLF', role: 'Arctic Marksman', outfit: {
       shirt: 0xdfe6ee, pants: 0xc9d2dc, vest: 0x8a95a3, helmet: 0xe8eef5, skin: 0xf0c8a0, camo: [0xdfe6ee, 0xaab6c4, 0x7a8794],
-      hat: 'helmet', mask: false, gaiter: true, maskColor: 0xdfe6ee, goggles: false, gogglesUp: true, earpro: true, scar: true, stubble: true, hairStyle: 'short', hair: 0xc9b27a, eye: 0x6fb6e8, pack: true, glove: 0x555d68, accent: 0x4aa3ff } },
+      kit: 'arctic', shape: { tw: 1.1, td: 1.12, lg: 1.1, th: 1.05, hd: 1.0 }, hat: 'helmet', mask: false, gaiter: false, maskColor: 0xdfe6ee, goggles: false, gogglesUp: true, earpro: true, scar: true, stubble: true, hairStyle: 'short', hair: 0xc9b27a, eye: 0x6fb6e8, pack: true, glove: 0x555d68, accent: 0x4aa3ff } },
     { name: 'NIGHT VIPER', role: 'Black Ops', outfit: {
       shirt: 0x1b1d20, pants: 0x17181a, vest: 0x101112, helmet: 0x0d0e10, skin: 0x6b4228, camo: null,
-      hat: 'beanie', mask: false, gaiter: true, maskColor: 0x0a0a0a, goggles: false, monocle: 0xe5313b, hairStyle: 'bald', hair: 0x0b0b0b, eye: 0x2a1a10, pack: true, glove: 0x0a0a0a, accent: 0xe5313b } }
+      kit: 'viper', shape: { tw: 0.88, td: 0.9, lg: 1.08, th: 0.84, hd: 0.97 }, hat: 'hood', mask: false, gaiter: true, maskColor: 0x0a0a0a, goggles: false, monocle: 0xe5313b, hairStyle: 'bald', hair: 0x0b0b0b, eye: 0x2a1a10, pack: true, glove: 0x0a0a0a, accent: 0xe5313b } }
   ];
 
   function drawSoldierPreview(cv, o) {
@@ -109,6 +109,8 @@
       }
       c.restore();
     }
+    const tw = (o.shape && o.shape.tw) || 1;
+    c.save(); c.translate(cx, 0); c.scale(tw, 1); c.translate(-cx, 0);                       // each character has its own body width
     rect(o.pants, cx - 22, 98, 19, 46); rect(o.pants, cx + 3, 98, 19, 46); camoBlobs(cx - 22, 98, 44, 46);
     rect(0x141414, cx - 24, 138, 22, 10); rect(0x141414, cx + 2, 138, 22, 10);
     rect(o.shirt, cx - 40, 56, 14, 44); rect(o.shirt, cx + 26, 56, 14, 44); camoBlobs(cx - 40, 56, 80, 44);
@@ -119,7 +121,13 @@
     [-12, -2, 8].forEach(function (x) { rect(0x111111, cx + x, 90, 8, 10); });
     rect(0x111111, cx - 26, 100, 52, 5);
     if (o.accent) { rect(o.accent, cx - 40, 62, 14, 6); rect(o.accent, cx - 14, 54, 10, 4); }
+    if (o.kit === 'viper') { rect(0x101112, cx - 30, 100, 14, 44); rect(0x101112, cx + 16, 100, 14, 44); rect(o.accent, cx - 28, 104, 2, 30); rect(o.accent, cx + 26, 104, 2, 30); }      // coat tails + glowing seams
+    if (o.kit === 'heavy') { c.save(); c.strokeStyle = '#111'; c.lineWidth = 6; c.beginPath(); c.moveTo(cx - 24, 58); c.lineTo(cx + 24, 98); c.stroke(); c.fillStyle = '#c9a24a'; for (let i = 0; i < 6; i++) c.fillRect(cx - 21 + i * 8, 61 + i * 6.4, 3, 5); c.restore(); rect(o.maskColor, cx - 30, 50, 60, 9); }   // bandolier + shemagh
+    if (o.kit === 'arctic') { rect(o.shirt, cx - 30, 98, 60, 18); rect(0xe9edf2, cx - 30, 114, 60, 4); }                                                              // parka skirt + fur trim
+    if (o.kit === 'ghillie' && o.camo) { for (let i = 0; i < 8; i++) { rect(o.camo[i % 3], cx - 40 + i * 10, 54, 4, 10 + (i % 3) * 4); } }                      // leaf strips
+    c.restore();
     rect(o.skin, cx - 5, 44, 10, 10);
+    if (o.kit === 'arctic') { c.fillStyle = '#e9edf2'; c.beginPath(); c.ellipse(cx, 52, 20, 7, 0, 0, Math.PI * 2); c.fill(); }
     c.fillStyle = hex(o.skin); c.beginPath(); c.ellipse(cx, 35, 14.5, 17, 0, 0, Math.PI * 2); c.fill();
     c.fillStyle = hex(o.skin); c.beginPath(); c.ellipse(cx, 44, 12.5, 11, 0, 0, Math.PI); c.fill();              // jaw
     c.fillStyle = 'rgba(0,0,0,0.16)'; c.beginPath(); c.arc(cx - 6.5, 33, 4, 0, Math.PI * 2); c.arc(cx + 6.5, 33, 4, 0, Math.PI * 2); c.fill();   // eye sockets
@@ -144,7 +152,7 @@
     if (o.gaiter) { c.fillStyle = hex(o.maskColor || 0x151515); c.fillRect(cx - 11, 49, 22, 6); }
     if (o.goggles && !o.gogglesUp) { rect(0x050505, cx - 14, 27, 28, 8); rect(0x6aa0c0, cx - 11, 29, 8, 4); rect(0x6aa0c0, cx + 3, 29, 8, 4); }
     c.fillStyle = hex(o.helmet);
-    if (o.hat === 'beanie') { c.beginPath(); c.ellipse(cx, 27, 16.5, 13, 0, Math.PI, 0); c.fill(); c.fillRect(cx - 16, 24, 32, 5); }
+    if (o.hat === 'beanie' || o.hat === 'hood') { c.beginPath(); c.ellipse(cx, 27, 16.5, 13, 0, Math.PI, 0); c.fill(); c.fillRect(cx - 16, 24, 32, 5); }
     else if (o.hat === 'cap') { c.beginPath(); c.arc(cx, 28, 16.5, Math.PI, 0); c.fill(); c.fillRect(cx - 17, 27, 34, 3); c.fillRect(cx - 12, 29, 24, 3); }
     else { c.beginPath(); c.arc(cx, 31, 18, Math.PI, 0); c.fill(); c.fillRect(cx - 19, 29, 38, 4); }
     if (o.gogglesUp) { rect(0x15191c, cx - 15, 25, 30, 4); rect(0x6aa0c0, cx - 12, 24, 10, 4); rect(0x6aa0c0, cx + 2, 24, 10, 4); }
@@ -438,11 +446,90 @@
     return t;
   }
 
+  /* ------------------------------------------------------------
+     character helpers: shared geometry, mesh merging, shared animation
+  ------------------------------------------------------------ */
+  const GEOC = {};
+  const CSEG = IS_PHONE ? 10 : 16;                                          // fewer polygons on phones
+  function GEO(kind, args, make) { const k = kind + args.join(','); return GEOC[k] || (GEOC[k] = make()); }
+  function bakeRig(rig) {
+    const flat = IS_PHONE;           // phones: one mesh per joint using vertex colours (about 20 draw calls per character instead of ~100)
+    const flatMat = flat ? new THREE.MeshLambertMaterial({ vertexColors: true }) : null;
+    if (flat) rig.mats.push(flatMat);
+    const groups = {}, order = [], keep = [];
+    rig.parts.forEach(function (m) {
+      if (!m.parent) return;
+      if (!m.visible) { m.parent.remove(m); return; }
+      if (m.userData.dyn || m.userData.keep) { keep.push(m); return; }
+      const mt = m.material, glowing = mt.emissive && mt.emissive.getHex() !== 0;
+      const key = flat && !glowing ? m.parent.id + '|flat|' + m.userData.part : m.parent.id + '|' + mt.uuid + '|' + m.userData.part + '|' + (m.castShadow ? 1 : 0);
+      if (!groups[key]) { groups[key] = []; order.push(key); }
+      groups[key].push(m);
+    });
+    const out = keep.slice(), v = new THREE.Vector3(), nm = new THREE.Matrix3();
+    order.forEach(function (key) {
+      const list = groups[key], parent = list[0].parent;
+      const pos = [], nor = [], uv = [], idx = [], col = []; let off = 0;
+      const useFlat = flat && list[0].material.userData.flat && !(list[0].material.emissive && list[0].material.emissive.getHex() !== 0);
+      list.forEach(function (m) {
+        m.updateMatrix();
+        const fc = useFlat ? m.material.userData.flat : null;
+        const ge = m.geometry, pa = ge.attributes.position, na = ge.attributes.normal, ua = ge.attributes.uv;
+        nm.getNormalMatrix(m.matrix);
+        for (let i = 0; i < pa.count; i++) {
+          v.fromBufferAttribute(pa, i).applyMatrix4(m.matrix); pos.push(v.x, v.y, v.z);
+          v.fromBufferAttribute(na, i).applyMatrix3(nm).normalize(); nor.push(v.x, v.y, v.z);
+          if (ua) uv.push(ua.getX(i), ua.getY(i)); else uv.push(0, 0);
+          if (fc) col.push(fc.r, fc.g, fc.b);
+        }
+        if (ge.index) { for (let i = 0; i < ge.index.count; i++) idx.push(ge.index.getX(i) + off); } else { for (let i = 0; i < pa.count; i++) idx.push(i + off); }
+        off += pa.count;
+      });
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      geo.setIndex(idx);
+      if (useFlat) geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      const mm = new THREE.Mesh(geo, useFlat ? flatMat : list[0].material);
+      mm.castShadow = useFlat ? false : list[0].castShadow; mm.userData.part = list[0].userData.part;
+      mm.matrixAutoUpdate = false; mm.updateMatrix();
+      list.forEach(function (m) { parent.remove(m); });
+      parent.add(mm); out.push(mm);
+    });
+    rig.meshesBefore = rig.parts.length;
+    rig.parts = out;
+    rig.drawCalls = out.length;
+  }
+  function sstep(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+  function reloadCurve(p) { p = p - Math.floor(p); return p < 0.25 ? sstep(p / 0.25) : p < 0.6 ? 1 : p < 0.85 ? sstep(1 - (p - 0.6) / 0.25) : 0; }   // hand to pouch, hold, back to the gun
+  /* one shared animation for every network player: idle breathing + head look, walk, run, jump, crouch, shoot recoil, reload (mag swap), cloth sway.
+     st = { spd, air, crouch, reload, reloadT, recoil, pitch, time } */
+  function animateRig(h, st, dt) {
+    const run = clamp(st.spd / 4.2, 0, 1.4), mv = Math.min(run, 1), air = st.air || 0, cs = st.crouch || 0, cr = cs * 0.55, lg = h.lg || 1;
+    h.walkT += dt * st.spd * 3.0; h.bt += dt * 1.7;
+    const sw = Math.sin(h.walkT) * (0.5 + 0.3 * Math.min(run, 1.4)) * mv * (1 - air);
+    h.legL.rotation.x = sw - cr - air * 0.7; h.legR.rotation.x = -sw - cr + air * 0.35;
+    h.kneeL.rotation.x = Math.max(0, -sw) * 1.3 + cr * 1.9 + air * 1.0; h.kneeR.rotation.x = Math.max(0, sw) * 1.3 + cr * 1.9 + air * 0.4;
+    if (h.ankleL) { h.ankleL.rotation.x = clamp(-(h.legL.rotation.x + h.kneeL.rotation.x) * 0.7, -0.7, 0.7); h.ankleR.rotation.x = clamp(-(h.legR.rotation.x + h.kneeR.rotation.x) * 0.7, -0.7, 0.7); }
+    h.torso.position.y = h.hipY - cs * 0.3 * lg + Math.abs(Math.sin(h.walkT)) * 0.04 * run + Math.sin(h.bt) * 0.006 - air * 0.03;
+    h.torso.rotation.x = -0.1 * run - cs * 0.12 + st.recoil * 0.03;
+    h.torso.rotation.z = Math.sin(h.walkT) * 0.04 * run + Math.sin(h.bt * 0.5) * 0.012 * (1 - mv);
+    h.torso.rotation.y = Math.sin(h.walkT) * 0.07 * run;
+    h.head.rotation.y = Math.sin(h.bt * 0.37) * 0.14 * (1 - mv) - Math.sin(h.walkT) * 0.07 * run;
+    h.head.rotation.x = -clamp(st.pitch, -1, 1) * 0.7 + Math.sin(h.bt * 0.8) * 0.02;
+    const low = run > 0.9 ? 0.18 : 0, rl = st.reload ? reloadCurve(st.reloadT / 1.8) : 0;
+    poseArms(h, 1.3 - low - rl * 0.15 + st.recoil * 0.12 + clamp(st.pitch, -1, 1) * 0.25 + air * 0.1, -0.4, 0.2 + low * 1.2 + st.recoil * 0.35 + rl * 0.25,
+      1.35 - low - rl * 0.95, 0.65 - rl * 0.25, 0.25 + low + rl * 1.35, -1.3 + rl * 0.25);
+    if (h.cloth) for (let i = 0; i < h.cloth.length; i++) { const c = h.cloth[i]; c.m.rotation.x = c.base + Math.sin(st.time * c.f + c.ph) * c.amp * (0.5 + mv) + mv * c.lean + air * 0.2; }
+  }
+
   function buildHumanoid(o) {
     const g = new THREE.Group();
     const parts = [], mats = [];
     function M(c, r, m, map) {
       const mt = new THREE.MeshStandardMaterial({ color: map ? 0xffffff : c, map: map || null, roughness: r == null ? 0.85 : r, metalness: m || 0 });
+      mt.userData.flat = new THREE.Color(c);
       mats.push(mt);
       return mt;
     }
@@ -467,16 +554,30 @@
       parts.push(m);
       return m;
     }
-    const B = function (x, y, z) { return new THREE.BoxGeometry(x, y, z); };
-    const C = function (rt, rb, h) { return new THREE.CylinderGeometry(rt, rb, h, 16); };
-    const S = function (r) { return new THREE.SphereGeometry(r, 16, 12); };
+    const B = function (x, y, z) { return GEO('B', [x, y, z], function () { return new THREE.BoxGeometry(x, y, z); }); };
+    const C = function (rt, rb, h) { return GEO('C', [rt, rb, h], function () { return new THREE.CylinderGeometry(rt, rb, h, CSEG); }); };
+    const S = function (r) { return GEO('S', [r], function () { return new THREE.SphereGeometry(r, CSEG, Math.round(CSEG * 0.75)); }); };
     const heavy = !!o.heavy;
+    // ---- body shape: every character gets its own proportions (shoulders, torso, legs, limb thickness, head size)
+    const SHP = o.shape || {}, tw = SHP.tw || 1, td = SHP.td || 1, lgS = SHP.lg || 1, thk = SHP.th || 1, hdS = SHP.hd || 1;
+    const hipY = 0.92 + (lgS - 1) * 1.0;
+    const bones = [], clothList = [];
+    function BN(name) { const b = new THREE.Bone(); b.name = name; bones.push(b); return b; }
+    function strip(w, len, mat, parent, x, y, z, rx, rz, amp, f, lean) {          // dangling cloth / leaf strip that sways while moving
+      const gg = GEO('T', [w, len], function () { const q = new THREE.BoxGeometry(w, len, 0.02); q.translate(0, -len / 2, 0); return q; });
+      const m = add(gg, mat, x, y, z, parent, 'body', true); m.rotation.x = rx || 0; m.rotation.z = rz || 0; m.userData.dyn = true;
+      clothList.push({ m: m, base: rx || 0, amp: amp || 0.08, f: f || 2.2, ph: Math.random() * 6.28, lean: lean == null ? -0.3 : lean });
+      return m;
+    }
 
     // legs: hip -> thigh -> knee -> shin -> boot (the knee really bends when walking)
-    const legL = new THREE.Group(); legL.position.set(-0.14, 0.92, 0); g.add(legL);
-    const legR = new THREE.Group(); legR.position.set(0.14, 0.92, 0); g.add(legR);
-    const kneeL = new THREE.Group(); kneeL.position.y = -0.47; legL.add(kneeL);
-    const kneeR = new THREE.Group(); kneeR.position.y = -0.47; legR.add(kneeR);
+    g.name = 'Root';
+    const legL = BN('Hip.L'); legL.position.set(-0.14 * tw, hipY, 0); legL.scale.setScalar(lgS); g.add(legL);
+    const legR = BN('Hip.R'); legR.position.set(0.14 * tw, hipY, 0); legR.scale.setScalar(lgS); g.add(legR);
+    const kneeL = BN('Knee.L'); kneeL.position.y = -0.47; legL.add(kneeL);
+    const kneeR = BN('Knee.R'); kneeR.position.y = -0.47; legR.add(kneeR);
+    const ankleL = BN('Ankle.L'); ankleL.position.y = -0.5; kneeL.add(ankleL);
+    const ankleR = BN('Ankle.R'); ankleR.position.y = -0.5; kneeR.add(ankleR);
     [[legL, kneeL, -1], [legR, kneeR, 1]].forEach(function (L) {
       const l = L[0], k = L[1], sd = L[2];
       add(C(0.11, 0.088, 0.5), pants, 0, -0.23, 0, l, 'limb');                    // thigh
@@ -484,46 +585,49 @@
       add(B(0.06, 0.2, 0.12), pants, 0.105 * sd, -0.25, 0, l, 'limb', true);      // cargo pocket
       add(C(0.082, 0.062, 0.46), pants, 0, -0.24, 0, k, 'limb');                  // shin
       add(B(0.15, 0.14, 0.07), pad, 0, 0.0, -0.085, k, 'limb', true);             // knee pad
-      add(C(0.07, 0.085, 0.14), boots, 0, -0.5, 0, k, 'limb');                    // boot shaft
-      add(B(0.16, 0.09, 0.3), boots, 0, -0.55, -0.06, k, 'limb');                 // foot
-      add(B(0.16, 0.025, 0.3), dark, 0, -0.595, -0.06, k, 'limb', true);          // sole
+      const an = sd < 0 ? ankleL : ankleR;
+      add(C(0.07, 0.085, 0.14), boots, 0, 0, 0, an, 'limb');                      // boot shaft
+      add(B(0.16, 0.09, 0.3), boots, 0, -0.05, -0.06, an, 'limb');                // foot
+      add(B(0.16, 0.025, 0.3), dark, 0, -0.095, -0.06, an, 'limb', true);         // sole
       if (heavy) add(B(0.17, 0.26, 0.05), vest, 0, -0.12, -0.1, l, 'limb', true); // thigh plate
     });
     if (!o.noHolster) add(B(0.07, 0.17, 0.09), strap, 0.16, -0.26, 0.0, legR, 'limb', true);   // holster
     if (!o.noHolster) add(B(0.045, 0.1, 0.07), metal, 0.17, -0.2, -0.01, legR, 'limb', true);
 
     // torso: belt, shirt, plate-carrier vest with pouches, radio, grenades, backpack
-    const torso = new THREE.Group(); torso.position.y = 0.92; g.add(torso);
-    add(B(0.46, 0.2, 0.27), pants, 0, 0.1, 0, torso, 'body');
-    add(B(0.49, 0.06, 0.3), strap, 0, 0.21, 0, torso, 'body');
-    add(B(0.06, 0.05, 0.02), metal, 0, 0.21, -0.155, torso, 'body', true);              // belt buckle
-    add(B(0.09, 0.1, 0.07), strap, -0.17, 0.17, -0.17, torso, 'body', true);
-    add(B(0.09, 0.1, 0.07), strap, 0.17, 0.17, -0.17, torso, 'body', true);
-    add(B(0.5, 0.52, 0.28), shirt, 0, 0.45, 0, torso, 'body');
-    add(B(0.55, 0.42, 0.34), vest, 0, 0.47, 0, torso, 'body');
-    add(B(0.3, 0.28, 0.06), strap, 0, 0.5, -0.19, torso, 'body');
-    [-0.12, 0, 0.12].forEach(function (x) { add(B(0.07, 0.1, 0.05), strap, x, 0.3, -0.2, torso, 'body', true); });
-    add(C(0.035, 0.035, 0.11), pad, 0.2, 0.34, -0.2, torso, 'body', true);               // grenade
-    add(S(0.03), metal, 0.2, 0.4, -0.2, torso, 'body', true);
-    add(B(0.06, 0.12, 0.05), metal, -0.21, 0.62, -0.19, torso, 'body', true);            // chest radio
-    add(C(0.008, 0.008, 0.2), dark, -0.22, 0.78, -0.19, torso, 'body', true);            // antenna
+    const torso = BN('Spine'); torso.position.y = hipY; g.add(torso);
+    const tm = new THREE.Group(); tm.scale.set(tw, 1, td); torso.add(tm);       // torso shell: width / depth differ per character
+    add(B(0.46, 0.2, 0.27), pants, 0, 0.1, 0, tm, 'body');
+    add(B(0.49, 0.06, 0.3), strap, 0, 0.21, 0, tm, 'body');
+    add(B(0.06, 0.05, 0.02), metal, 0, 0.21, -0.155, tm, 'body', true);              // belt buckle
+    add(B(0.09, 0.1, 0.07), strap, -0.17, 0.17, -0.17, tm, 'body', true);
+    add(B(0.09, 0.1, 0.07), strap, 0.17, 0.17, -0.17, tm, 'body', true);
+    add(B(0.5, 0.52, 0.28), shirt, 0, 0.45, 0, tm, 'body');
+    add(B(0.55, 0.42, 0.34), vest, 0, 0.47, 0, tm, 'body');
+    add(B(0.3, 0.28, 0.06), strap, 0, 0.5, -0.19, tm, 'body');
+    [-0.12, 0, 0.12].forEach(function (x) { add(B(0.07, 0.1, 0.05), strap, x, 0.3, -0.2, tm, 'body', true); });
+    add(C(0.035, 0.035, 0.11), pad, 0.2, 0.34, -0.2, tm, 'body', true);               // grenade
+    add(S(0.03), metal, 0.2, 0.4, -0.2, tm, 'body', true);
+    add(B(0.06, 0.12, 0.05), metal, -0.21, 0.62, -0.19, tm, 'body', true);            // chest radio
+    add(C(0.008, 0.008, 0.2), dark, -0.22, 0.78, -0.19, tm, 'body', true);            // antenna
     if (o.pack) {
-      add(B(0.36, 0.42, 0.18), vest, 0, 0.45, 0.26, torso, 'body');
-      add(C(0.07, 0.07, 0.34), strap, 0, 0.72, 0.26, torso, 'body', true).rotation.z = Math.PI / 2;
-      add(B(0.2, 0.18, 0.06), pad, 0, 0.35, 0.37, torso, 'body', true);
+      add(B(0.36, 0.42, 0.18), vest, 0, 0.45, 0.26, tm, 'body');
+      add(C(0.07, 0.07, 0.34), strap, 0, 0.72, 0.26, tm, 'body', true).rotation.z = Math.PI / 2;
+      add(B(0.2, 0.18, 0.06), pad, 0, 0.35, 0.37, tm, 'body', true);
     } else {
-      add(B(0.3, 0.3, 0.06), strap, 0, 0.5, 0.19, torso, 'body');
+      add(B(0.3, 0.3, 0.06), strap, 0, 0.5, 0.19, tm, 'body');
     }
-    if (accent) add(B(0.1, 0.06, 0.02), accent, -0.15, 0.62, -0.18, torso, 'body', true);
-    add(B(0.09, 0.05, 0.34), vest, -0.17, 0.69, 0, torso, 'body', true);
-    add(B(0.09, 0.05, 0.34), vest, 0.17, 0.69, 0, torso, 'body', true);
-    add(S(heavy ? 0.14 : 0.09), vest, -0.31, 0.65, 0, torso, 'body');
-    add(S(heavy ? 0.14 : 0.09), vest, 0.31, 0.65, 0, torso, 'body');
-    if (heavy) { add(B(0.5, 0.36, 0.08), vest, 0, 0.5, -0.22, torso, 'body'); if (accent) add(B(0.3, 0.05, 0.02), accent, 0, 0.62, -0.27, torso, 'body', true); }
-    add(C(0.06, 0.07, 0.12), skin, 0, 0.74, 0, torso, 'body', true);                     // neck
+    if (accent) add(B(0.1, 0.06, 0.02), accent, -0.15, 0.62, -0.18, tm, 'body', true);
+    add(B(0.09, 0.05, 0.34), vest, -0.17, 0.69, 0, tm, 'body', true);
+    add(B(0.09, 0.05, 0.34), vest, 0.17, 0.69, 0, tm, 'body', true);
+    add(S(heavy ? 0.14 : 0.09), vest, -0.31, 0.65, 0, tm, 'body');
+    add(S(heavy ? 0.14 : 0.09), vest, 0.31, 0.65, 0, tm, 'body');
+    if (heavy) { add(B(0.5, 0.36, 0.08), vest, 0, 0.5, -0.22, tm, 'body'); if (accent) add(B(0.3, 0.05, 0.02), accent, 0, 0.62, -0.27, tm, 'body', true); }
+    add(C(0.06, 0.07, 0.12), skin, 0, 0.74, 0, tm, 'body', true);                     // neck
 
     // head: sculpted from scaled spheres - skull, cheekbones, jaw, eyes (sclera/iris/pupil/lids), brows, nose, lips, ears, hair, facial hair, scars, face paint
-    const head = new THREE.Group(); head.position.set(0, 0.9, 0); torso.add(head);
+    const neck = BN('Neck'); neck.position.set(0, 0.74, 0); torso.add(neck);
+    const head = BN('Head'); head.position.set(0, 0.16, 0); head.scale.setScalar(hdS); neck.add(head);
     const eyeM = M(o.eye == null ? 0x4a3622 : o.eye, 0.25), lipUp = M(shade(o.skin, 0.62), 0.5), lipLow = M(shade(o.skin, 0.74), 0.45), browM = M(o.hair == null ? 0x2a1d14 : o.hair, 0.9);
     const skull = add(new THREE.SphereGeometry(0.125, 24, 18), skin, 0, 0, 0, head, 'head'); skull.scale.set(0.92, 1.1, 1.0);
     const jaw = add(new THREE.SphereGeometry(0.086, 18, 12), skin, 0, -0.07, -0.03, head, 'head', true); jaw.scale.set(1.12, 0.92, 1.02);
@@ -573,6 +677,10 @@
       helmet = add(new THREE.SphereGeometry(0.138, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.5), helmM, 0, 0.032, 0, head, 'head');
       add(B(0.2, 0.02, 0.13), helmM, 0, 0.042, -0.14, head, 'head', true);
       add(B(0.22, 0.07, 0.07), hair, 0, 0.0, 0.1, head, 'head', true);
+    } else if (o.hat === 'hood') {
+      helmet = add(new THREE.SphereGeometry(0.15, 20, 14, 0, Math.PI * 2, 0, Math.PI * 0.62), cloth, 0, 0.0, 0.01, head, 'head');
+      const pk = add(new THREE.ConeGeometry(0.085, 0.24, 10), cloth, 0, 0.12, 0.14, head, 'head', true); pk.rotation.x = 1.15;
+      add(B(0.2, 0.05, 0.05), cloth, 0, 0.065, -0.135, head, 'head', true);
     } else if (o.hat === 'beanie') {
       helmet = add(new THREE.SphereGeometry(0.137, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), cloth, 0, 0.03, 0, head, 'head');
       add(C(0.139, 0.139, 0.035), cloth, 0, 0.045, 0, head, 'head', true);
@@ -594,7 +702,7 @@
     if (o.mask) add(B(0.2, 0.1, 0.21), cloth, 0, -0.06, -0.005, head, 'head');
     if (o.gaiter) {                                                                  // neck gaiter / scarf, face stays visible
       add(C(0.092, 0.105, 0.085), cloth, 0, -0.135, -0.005, head, 'head', true);
-      add(C(0.1, 0.12, 0.09), cloth, 0, 0.715, 0, torso, 'body', true);
+      add(C(0.1, 0.12, 0.09), cloth, 0, 0.715, 0, tm, 'body', true);
     }
     if (o.goggles !== false && !o.gogglesUp) {
       add(B(0.23, 0.05, 0.06), glass, 0, 0.02, -0.115, head, 'head', true);
@@ -610,27 +718,75 @@
     }
 
     // arms: shoulder -> upper arm -> elbow -> forearm -> glove
-    const armR = new THREE.Group(); armR.position.set(0.34, 0.62, 0); torso.add(armR);
-    const armL = new THREE.Group(); armL.position.set(-0.34, 0.62, 0); torso.add(armL);
-    const elbowR = new THREE.Group(); elbowR.position.y = -0.31; armR.add(elbowR);
-    const elbowL = new THREE.Group(); elbowL.position.y = -0.31; armL.add(elbowL);
-    [[armR, elbowR], [armL, elbowL]].forEach(function (A) {
-      const a = A[0], e = A[1];
+    const armR = BN('Shoulder.R'); armR.position.set(0.34 * tw, 0.62, 0); torso.add(armR);
+    const armL = BN('Shoulder.L'); armL.position.set(-0.34 * tw, 0.62, 0); torso.add(armL);
+    const elbowR = BN('Elbow.R'); elbowR.position.y = -0.31; armR.add(elbowR);
+    const elbowL = BN('Elbow.L'); elbowL.position.y = -0.31; armL.add(elbowL);
+    const handR = BN('Hand.R'); handR.position.y = -0.3; elbowR.add(handR);
+    const handL = BN('Hand.L'); handL.position.y = -0.3; elbowL.add(handL);
+    [[armR, elbowR, handR], [armL, elbowL, handL]].forEach(function (A) {
+      const a = A[0], e = A[1], hd = A[2];
       add(C(0.08, 0.066, 0.32), shirt, 0, -0.155, 0, a, 'limb');                         // upper arm
       add(S(0.068), shirt, 0, -0.31, 0, a, 'limb', true);                                // elbow joint
       add(C(0.066, 0.056, 0.3), shirt, 0, -0.15, 0, e, 'limb');                          // forearm
       add(B(0.11, 0.07, 0.11), pad, 0, 0.0, -0.05, e, 'limb', true);                     // elbow pad
       add(C(0.062, 0.062, 0.06), strap, 0, -0.26, 0, e, 'limb', true);                   // wrist band
       if (accent) add(C(0.086, 0.086, 0.06), accent, 0, -0.12, 0, a, 'limb', true);
-      add(B(0.1, 0.11, 0.12), glove, 0, -0.33, 0, e, 'limb');                            // hand
+      add(B(0.1, 0.11, 0.12), glove, 0, -0.03, 0, hd, 'limb');                           // hand
     });
+
+    // ---- character kits: each of the four characters has its own gear and silhouette
+    const kitName = o.kit || '';
+    if (kitName === 'ghillie') {                                        // GHOST: leaf-strip ghillie camo, drop pouch, rolled mat
+      const cc = o.camo || [0x4b5a3a, 0x2f3b2c, 0x6b5a3c], lm = cc.map(function (c) { return M(c, 0.97); });
+      for (let n = 0; n < 5; n++) { strip(0.05, 0.28 + (n % 3) * 0.06, lm[n % 3], armR, 0.02 + n * 0.012, -0.02 - n * 0.05, 0.01 * (n % 2 ? 1 : -1), 0, 0.12, 0.1, 2.0 + n * 0.3); strip(0.05, 0.28 + (n % 3) * 0.06, lm[(n + 1) % 3], armL, -0.02 - n * 0.012, -0.02 - n * 0.05, 0.01 * (n % 2 ? 1 : -1), 0, -0.12, 0.1, 2.1 + n * 0.3); }
+      for (let n = 0; n < 6; n++) strip(0.07, 0.3 + (n % 3) * 0.07, lm[n % 3], tm, -0.2 + n * 0.08, 0.72, 0.2, 0.15, 0, 0.07, 1.7 + n * 0.25, -0.35);
+      for (let n = 0; n < 5; n++) strip(0.05, 0.16 + (n % 2) * 0.05, lm[(n + 2) % 3], head, -0.09 + n * 0.045, 0.1, 0.1, 0.25, 0, 0.1, 2.4 + n * 0.2, -0.4);
+      add(B(0.1, 0.15, 0.06), pad, -0.16, -0.3, 0.0, legL, 'limb', true);
+      add(C(0.06, 0.06, 0.42), cloth, 0, 0.86, 0.3, tm, 'body', true).rotation.z = Math.PI / 2;
+    } else if (kitName === 'heavy') {                                   // DESERT HAWK: broad frame, shemagh, ammo bandolier, bedroll
+      add(B(0.66, 0.15, 0.42), cloth, 0, 0.7, 0.0, tm, 'body');
+      add(B(0.2, 0.3, 0.04), cloth, -0.08, 0.5, -0.24, tm, 'body', true);
+      const bl = add(B(0.075, 0.82, 0.035), strap, 0, 0.5, -0.215, tm, 'body', true); bl.rotation.z = 0.62;
+      for (let n = 0; n < 8; n++) { const t = (n - 3.5) * 0.095; add(C(0.014, 0.014, 0.075), M(0xc9a24a, 0.35, 0.7), -Math.sin(0.62) * t, 0.5 + Math.cos(0.62) * t, -0.24, tm, 'body', true).rotation.z = 0.62 + Math.PI / 2; }
+      add(C(0.075, 0.075, 0.5), M(shade(o.shirt, 0.8), 0.95), 0, 0.66, 0.3, tm, 'body', true).rotation.z = Math.PI / 2;
+      add(B(0.2, 0.22, 0.06), pad, 0, 0.34, 0.2, tm, 'body', true);
+      [-1, 1].forEach(function (sd) { add(B(0.2, 0.18, 0.08), pad, 0, -0.0, -0.095, sd < 0 ? kneeL : kneeR, 'limb', true); });
+      add(B(0.1, 0.14, 0.05), metal, 0.2, 0.55, -0.22, tm, 'body', true);                  // chest knife
+    } else if (kitName === 'arctic') {                                  // ARCTIC WOLF: insulated parka, fur hood ring, mittens, scarf tails, ice axe
+      const furM = M(0xe9edf2, 1.0);
+      add(B(0.6, 0.4, 0.36), shirt, 0, -0.02, 0, tm, 'body');
+      add(B(0.62, 0.05, 0.38), furM, 0, -0.2, 0, tm, 'body', true);
+      add(C(0.16, 0.2, 0.12), shirt, 0, 0.78, 0, tm, 'body', true);
+      const ring = add(new THREE.TorusGeometry(0.17, 0.055, 8, 18), furM, 0, -0.1, 0.0, head, 'head', true); ring.rotation.x = Math.PI / 2;
+      strip(0.07, 0.34, M(o.accent || 0x4aa3ff, 0.9), head, 0.07, -0.13, 0.11, 0.2, 0.0, 0.1, 1.8, -0.4);
+      strip(0.07, 0.28, M(o.accent || 0x4aa3ff, 0.9), head, 0.12, -0.13, 0.1, 0.2, 0.0, 0.1, 2.3, -0.4);
+      [handL, handR].forEach(function (hd) { add(B(0.13, 0.14, 0.15), glove, 0, -0.04, 0, hd, 'limb', true); });
+      const ax = add(C(0.012, 0.012, 0.7), metal, 0.2, 0.55, 0.38, tm, 'body', true); ax.rotation.z = 0.25;
+      add(B(0.12, 0.03, 0.04), metal, 0.27, 0.9, 0.38, tm, 'body', true);
+    } else if (kitName === 'viper') {                                   // NIGHT VIPER: slim stealth suit, long coat tails, spiked pauldron, forearm blade, glowing seams
+      const glow = new THREE.MeshStandardMaterial({ color: o.accent || 0xe5313b, emissive: o.accent || 0xe5313b, emissiveIntensity: 0.9, roughness: 0.4 });
+      strip(0.25, 0.62, strap, tm, -0.13, 0.14, 0.17, 0.02, 0.06, 0.07, 1.6, -0.45);
+      strip(0.25, 0.62, strap, tm, 0.13, 0.14, 0.17, 0.02, -0.06, 0.07, 1.9, -0.45);
+      strip(0.12, 0.45, strap, tm, 0.0, 0.14, 0.2, 0.0, 0.0, 0.09, 1.4, -0.5);
+      const pa = add(B(0.22, 0.07, 0.24), metal, 0, 0.05, 0, armL, 'limb', true); pa.rotation.z = 0.25;
+      [-0.07, 0.0, 0.07].forEach(function (z) { const sp = add(new THREE.ConeGeometry(0.025, 0.12, 6), metal, -0.08, 0.13, z, armL, 'limb', true); sp.rotation.z = 0.3; });
+      const bl = add(B(0.028, 0.04, 0.36), metal, 0.0, -0.14, -0.14, elbowR, 'limb', true); bl.rotation.x = 0.1;
+      add(B(0.03, 0.4, 0.012), glow, -0.12, 0.5, -0.2, tm, 'body', true); add(B(0.03, 0.4, 0.012), glow, 0.12, 0.5, -0.2, tm, 'body', true);
+      [legL, legR].forEach(function (lg) { add(B(0.014, 0.4, 0.02), glow, 0, -0.22, -0.1, lg, 'limb', true); });
+    }
+    [legL, legR, armR, armL].forEach(function (grp) { grp.traverse(function (m) { if (m.isMesh && !m.userData.dyn) { m.scale.x *= thk; m.scale.z *= thk; } }); });   // limb thickness per character
     // holder chain: three nested groups that cancel the arm + elbow rotation so the weapon stays aligned with the body
     const holderA = new THREE.Group(); holderA.position.set(0, -0.3, 0); elbowR.add(holderA);
     const holderB = new THREE.Group(); holderA.add(holderB);
     const holder = new THREE.Group(); holderB.add(holder);
 
-    const rig = { group: g, parts: parts, mats: mats, legL: legL, legR: legR, kneeL: kneeL, kneeR: kneeR, torso: torso, head: head,
-             helmet: helmet, armR: armR, armL: armL, elbowR: elbowR, elbowL: elbowL, holderA: holderA, holderB: holderB, holder: holder, walkT: 0 };
+    if (helmet) helmet.userData.keep = true;                              // stays a separate mesh so a headshot can knock it off
+    const rig = { group: g, parts: parts, mats: mats, legL: legL, legR: legR, kneeL: kneeL, kneeR: kneeR, ankleL: ankleL, ankleR: ankleR, torso: torso, neck: neck, head: head,
+             helmet: helmet, armR: armR, armL: armL, elbowR: elbowR, elbowL: elbowL, handR: handR, handL: handL, holderA: holderA, holderB: holderB, holder: holder, walkT: 0,
+             hipY: hipY, lg: lgS, cloth: clothList, bones: bones, bt: Math.random() * 6 };
+    rig.skeleton = new THREE.Skeleton(bones);                             // named joints: Hip/Knee/Ankle, Spine, Neck, Head, Shoulder/Elbow/Hand
+    bakeRig(rig);                                                         // merge the many small meshes per joint into a few (big speed-up on phones)
     poseArms(rig, 1.3, -0.4, 0.2, 1.35, 0.65, 0.25, -1.3);
     return rig;
   }
@@ -649,7 +805,7 @@
 
   function lightenRig(h) {            // phones: far fewer draw calls per character
     if (!IS_PHONE || !h || !h.parts) return h;
-    h.parts.forEach(function (m) { if (!m.castShadow && m.userData.part !== 'head') m.visible = false; });
+    if (h.cloth) h.cloth.forEach(function (c) { c.m.visible = false; });          // sway strips are cosmetic: skip them on phones
     return h;
   }
   /* realistic animated soldier if models.js managed to load one, otherwise the procedural soldier above */
@@ -2585,7 +2741,8 @@
     m.kneeL.rotation.x = Math.max(0, -sw) * 1.3 * (1 - air) + air * 1.2 + sl * 0.3 + G.crouch * 1.2;
     m.kneeR.rotation.x = Math.max(0, sw) * 1.3 * (1 - air) + air * 0.6 + sl * 1.5 + G.crouch * 1.2;
     if (gunLike) {
-      poseArms(m, 1.3 + G.pitch, -0.4, 0.2 + G.kick * 0.3, 1.35 + G.pitch, 0.65, 0.25, -1.3);
+      const rlp = G.reloading > 0 ? reloadCurve(1 - G.reloading / G.reloadTotal) : 0;      // left hand goes to the mag pouch and back
+      poseArms(m, 1.3 + G.pitch - rlp * 0.15, -0.4, 0.2 + G.kick * 0.3 + rlp * 0.25, 1.35 + G.pitch - rlp * 0.95, 0.65 - rlp * 0.25, 0.25 + rlp * 1.35, -1.3 + rlp * 0.25);
       if (tppWeapon) tppWeapon.position.z = -0.1 + G.kick * 0.05;
     } else {
       let swing = 0;
@@ -2597,6 +2754,12 @@
       m.group.rotation.x = 0.4 * sl - 0.22 * G.sprint + (G.onGround ? 0 : 0.08);
     }
     m.torso.rotation.x = -0.12 * G.sprint;
+    if (m.ankleL) {
+      m.ankleL.rotation.x = clamp(-(m.legL.rotation.x + m.kneeL.rotation.x) * 0.7, -0.7, 0.7); m.ankleR.rotation.x = clamp(-(m.legR.rotation.x + m.kneeR.rotation.x) * 0.7, -0.7, 0.7);
+      m.torso.position.y = m.hipY + Math.sin(G.time * 1.7) * 0.006;
+      m.head.rotation.x = -clamp(G.pitch, -1, 1) * 0.5;
+    }
+    if (m.cloth) for (let i = 0; i < m.cloth.length; i++) { const c = m.cloth[i]; c.m.rotation.x = c.base + Math.sin(G.time * c.f + c.ph) * c.amp * (0.5 + G.moveAmt) + G.moveAmt * c.lean; }
   }
 
   /* ------------------------------------------------------------
@@ -3012,7 +3175,8 @@
     remoteDie: function (r) { r.dead = true; r.deadT = 0; r.fallDir = Math.random() < 0.5 ? 1 : -1; r.roll = rand(-0.5, 0.5); r.h.mats.forEach(function (m) { m.emissive.setHex(0x000000); }); },
     remoteRespawn: function (r, x, z) {
       r.dead = false; r.deadT = 0; r.group.visible = true; r.group.rotation.x = 0; r.group.rotation.z = 0; r.group.position.set(x, 0, z); r.tx = x; r.tz = z; r.spawnT = 0.5;
-      r.h.torso.position.y = 0.92; r.h.head.rotation.x = 0;
+      r.h.torso.position.y = r.h.hipY || 0.92; r.h.head.rotation.x = 0;
+      r.h.mats.forEach(function (m) { if (m.emissive) m.emissive.setHex(0x1a4fd0); }); r.hurtT = 0.5;      // respawn: short blue glow while the player is protected
     },
     remoteShot: function (id, w) {
       const r = G.remotes[id]; if (!r || r.dead) return;
@@ -3149,7 +3313,7 @@
         r.group.rotation.order = 'XYZ';
         if (r.deathStyle === 0) { r.group.rotation.x = q * 1.5 * r.fallDir; r.group.rotation.z = q * r.roll; h.armR.rotation.x = 1.3 - q * 2.4; h.armL.rotation.x = 1.35 - q * 2.2; }
         else if (r.deathStyle === 1) { r.group.rotation.z = q * 1.45 * (r.roll >= 0 ? 1 : -1); r.group.rotation.x = q * 0.4 * r.fallDir; h.armR.rotation.x = 1.3 - q * 1.6; }
-        else { const kk = Math.min(1, p * 2.2); h.kneeL.rotation.x = kk * 1.9; h.kneeR.rotation.x = kk * 1.9; h.torso.position.y = 0.92 - kk * 0.45; r.group.rotation.x = Math.max(0, p - 0.35) / 0.65 * -1.45 * r.fallDir; }
+        else { const kk = Math.min(1, p * 2.2); h.kneeL.rotation.x = kk * 1.9; h.kneeR.rotation.x = kk * 1.9; h.torso.position.y = (h.hipY || 0.92) - kk * 0.45; r.group.rotation.x = Math.max(0, p - 0.35) / 0.65 * -1.45 * r.fallDir; }
         pos.y = p * 0.12;
         if (h.glb && !h.glb.frozen) h.glb.freeze();
         if (r.tag) r.tag.visible = false;
@@ -3172,7 +3336,6 @@
       r.group.rotation.order = 'YXZ';
       r.group.rotation.y = r.yaw; r.group.rotation.x = -0.9 * r.slideAmt; r.group.rotation.z = 0;
       if (r.tag) { r.tag.visible = r.friendly || !G.mp.teams; if (r.tag.visible) { const d = Math.hypot(G.pos.x - pos.x, G.pos.z - pos.z); r.tag.visible = d < 60; } }
-      h.walkT += dt * r.spd * 3.0;
       r.stepAcc += r.spd * dt;
       if (r.stepAcc > 2.3) {
         r.stepAcc = 0;
@@ -3180,18 +3343,10 @@
         if (dist < 32 && G.stepBudget > 0 && !r.airAmt) { G.stepBudget--; Sound.step(clamp(1 - dist / 32, 0, 1) * 0.9, panFor(pos.x, pos.z)); }
         if (r.spd > 5 && dist < 45 && SET.vfx > 0) Fx.dust(_t1.set(pos.x, 0.05, pos.z), world.def.dust, 0.8);
       }
-      const run = clamp(r.spd / 4.2, 0, 1.4);
-      const sw = Math.sin(h.walkT) * 0.75 * Math.min(run, 1) * (1 - r.airAmt);
-      const cr = r.crouchAmt * 0.55;
-      h.legL.rotation.x = sw - cr - r.airAmt * 0.7; h.legR.rotation.x = -sw - cr + r.airAmt * 0.35;
-      h.kneeL.rotation.x = Math.max(0, -sw) * 1.3 + cr * 1.9 + r.airAmt * 1.0; h.kneeR.rotation.x = Math.max(0, sw) * 1.3 + cr * 1.9 + r.airAmt * 0.4;
-      r.breath += dt * 1.7;
-      h.torso.position.y = 0.92 - r.crouchAmt * 0.3 + Math.abs(Math.sin(h.walkT)) * 0.04 * run + Math.sin(r.breath) * 0.006;
-      h.torso.rotation.x = -0.1 * run - r.crouchAmt * 0.12; h.torso.rotation.z = Math.sin(h.walkT) * 0.04 * run; h.torso.rotation.y = Math.sin(h.walkT) * 0.07 * run;
-      h.head.rotation.y = 0; h.head.rotation.x = -clamp(r.pitch, -1, 1) * 0.7;
+      r.reloadT = reloading ? (r.reloadT || 0) + dt : 0;
       r.recoil = Math.max(0, r.recoil - dt * 8);
-      const low = run > 0.9 ? 0.18 : 0;
-      poseArms(h, 1.3 - low - reloading * 0.35 + r.recoil * 0.12 + clamp(r.pitch, -1, 1) * 0.25, -0.4, 0.2 + low * 1.2 + r.recoil * 0.35 + reloading * 0.5, 1.35 - low - reloading * 0.5, 0.65, 0.25 + low + reloading * 0.4, -1.3);
+      if (h.bones) animateRig(h, { spd: r.spd, air: r.airAmt, crouch: r.crouchAmt, reload: reloading, reloadT: r.reloadT, recoil: r.recoil, pitch: r.pitch, time: G.time }, dt);
+      else h.walkT += dt * r.spd * 3.0;
       r.gun.position.z = -0.1 + r.recoil * 0.05;
       if (h.glb) h.glb.update(dt, { spd: r.spd, aim: 1, recoil: r.recoil, crouch: r.crouchAmt, air: r.airAmt, reload: reloading, pitch: r.pitch });
       if (r.flashT > 0) { r.flashT -= dt; if (r.flashT <= 0 && r.gun.userData.flash) r.gun.userData.flash.visible = false; }
@@ -3220,6 +3375,7 @@
   window.SZ = {
     G: G, MPG: MPG, CHARS: CHARS, WEAPONS: WEAPONS, MAPS: MAPS,
     drawPreview: function (cv, idx) { drawSoldierPreview(cv, CHARS[idx].outfit); },
+    buildCharacter: function (i) { return buildCharacter(CHARS[i].outfit, 0xffffff); }, animateRig: animateRig, makeWeapon: makeWeaponModel, THREE_: THREE,
     killFeed: killFeed, banner: function (a, b, c) { UI.banner(a, b, c); },
     setChar: function (i) { SET.char = i; saveSettings(); },
     begin: function (cfg) {
