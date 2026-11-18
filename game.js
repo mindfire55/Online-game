@@ -41,6 +41,17 @@
     };
   }
   let SET = defaultSettings();
+  /* phones: one-time lighter defaults so the game does not lag (can still be changed in Settings) */
+  const IS_PHONE = ('ontouchstart' in window) && !!window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  try {
+    if (IS_PHONE && !localStorage.getItem('sz_mobile_perf1')) {
+      const r0 = JSON.parse(localStorage.getItem(SET_KEY) || '{}') || {};
+      r0.vfx = Math.min(typeof r0.vfx === 'number' ? r0.vfx : 1, 1); r0.weather = false; r0.clouds = false; r0.grade = false; r0.vignette = false; r0.grain = false; r0.shake = false;
+      localStorage.setItem(SET_KEY, JSON.stringify(r0));
+      localStorage.setItem('strikezone_quality', 'low');
+      localStorage.setItem('sz_mobile_perf1', '1');
+    }
+  } catch (e) { /* ignore */ }
   function loadSettings() {
     try {
       const raw = JSON.parse(localStorage.getItem(SET_KEY));
@@ -166,8 +177,8 @@
      renderer + camera (created once)
   ------------------------------------------------------------ */
   const canvas = $('game-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !IS_PHONE, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, IS_PHONE ? 1 : 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -636,6 +647,11 @@
     h.elbowL.rotation.x = le;
   }
 
+  function lightenRig(h) {            // phones: far fewer draw calls per character
+    if (!IS_PHONE || !h || !h.parts) return h;
+    h.parts.forEach(function (m) { if (!m.castShadow && m.userData.part !== 'head') m.visible = false; });
+    return h;
+  }
   /* realistic animated soldier if models.js managed to load one, otherwise the procedural soldier above */
   const MAP_TINT = { dust: 0xffe8c4, jungle: 0xdcf0cc, yard: 0xd6dce4, snow: 0xffffff };
   const KIND_TINT = { heavy: 0xffb4a6, scout: 0xcfe6ff };
@@ -647,7 +663,7 @@
         if (r) return r;
       } catch (err) { if (window.console) console.warn('[models] falling back to built-in soldier: ' + err.message); }
     }
-    return buildHumanoid(outfit);
+    return lightenRig(buildHumanoid(outfit));
   }
 
   const CAMO_SETS = {
@@ -924,7 +940,7 @@
 
   function beginMatch() {
     try {
-      const Q = QUALITY[G.quality];
+      const Q = IS_PHONE ? Object.assign({}, QUALITY[G.quality], { pr: 1, shadows: false }) : QUALITY[G.quality];
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Q.pr));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.enabled = Q.shadows;
@@ -1774,8 +1790,8 @@
   function updateSpawner(dt) {
     let alive = 0;
     G.enemies.forEach(function (e) { if (!e.dead) alive++; });
-    const cap = G.quality === 'low' ? 12 : 20;
-    const want = Math.min(12 + Math.floor(G.kills / 2), cap + 4);
+    const cap = IS_PHONE ? 8 : G.quality === 'low' ? 12 : 20;
+    const want = Math.min((IS_PHONE ? 8 : 12) + Math.floor(G.kills / 2), cap + 4);
     G.spawnTimer -= dt;
     if (alive < want && G.spawnTimer <= 0) {
       spawnEnemy(false);
@@ -2613,8 +2629,10 @@
   /* ------------------------------------------------------------
      HUD
   ------------------------------------------------------------ */
+  let miniSkip = 0;
   function drawMinimap() {
     if (!SET.hud.minimap) return;
+    if (IS_PHONE && (miniSkip++ % 3)) return;
     const c = miniCtx, S = 150, scale = 1.0;
     c.clearRect(0, 0, S, S);
     c.save();
@@ -3216,39 +3234,119 @@
   /* ------------------------------------------------------------
      v12: touch controls (joystick, look pad, buttons). Auto-fire does the shooting.
   ------------------------------------------------------------ */
+  let TCAPI = null;                       // set by setupTouch; used by Settings > Controls on phones
   function setupTouch() {
     if (!TOUCH) return;
+    const LKEY = 'strikezone_touch_layout';
+    let L = { pos: {}, scale: 1, alpha: 1 };
+    try { const r = JSON.parse(localStorage.getItem(LKEY) || 'null'); if (r && typeof r === 'object') { L.pos = r.pos || {}; L.scale = clamp(+r.scale || 1, 0.7, 1.6); L.alpha = clamp(+r.alpha || 1, 0.3, 1); } } catch (e) { /* ignore */ }
+    function saveL() { try { localStorage.setItem(LKEY, JSON.stringify(L)); } catch (e) { /* ignore */ } }
+    let editing = false;
     const css = document.createElement('style');
-    css.textContent = '#tc{position:fixed;inset:0;z-index:30;pointer-events:none;touch-action:none;user-select:none}#tc>div{position:absolute;pointer-events:auto;touch-action:none}'
+    css.textContent = '#tc{position:fixed;inset:0;z-index:30;pointer-events:none;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}#tc>div{position:absolute;pointer-events:auto;touch-action:none}'
       + '#tc-joy{left:4vw;bottom:8vh;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.3)}'
       + '#tc-knob{position:absolute;left:45px;top:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.45)}'
       + '#tc-look{right:0;top:0;width:55vw;height:100%}'
-      + '.tc-b{width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.4);color:#fff;font:700 11px sans-serif;display:flex;align-items:center;justify-content:center}';
+      + '.tc-b{width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.4);color:#fff;font:700 11px sans-serif;display:flex;align-items:center;justify-content:center}'
+      + '#tc>.tc-ctl{transform:scale(var(--tcs,1));opacity:var(--tca,1)}'
+      + 'body.tc-editing .screen{display:none!important}'
+      + 'body.tc-editing #tc-look{display:none}'
+      + 'body.tc-editing .tc-ctl{outline:2px dashed #ffb02e;outline-offset:3px;background-color:rgba(255,176,46,.28)}'
+      + '#tc-editbg{position:fixed;inset:0;z-index:29;display:none;background:rgba(8,12,18,.94);background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:40px 40px}'
+      + 'body.tc-editing #tc-editbg{display:block}'
+      + '#tc-edit{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);z-index:40;display:none;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 12px;color:#fff;font:600 12px sans-serif;max-width:94vw}'
+      + 'body.tc-editing #tc-edit{display:flex}'
+      + '#tc-edit label{display:flex;align-items:center;gap:6px}#tc-edit input{width:90px}'
+      + '#tc-edit button{font:700 12px sans-serif;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.4);background:#222;color:#fff}'
+      + '#tc-edit button.go{background:#e8731a;border-color:#e8731a}'
+      + '@media (hover:none) and (pointer:coarse){#fx-grain{display:none!important}#game-canvas{filter:none!important}}';   // phone speed: no animated grain / CSS colour filter on the 3D canvas
     document.head.appendChild(css);
     const root = document.createElement('div'); root.id = 'tc';
-    root.innerHTML = '<div id="tc-look"></div><div id="tc-joy"><div id="tc-knob"></div></div>';
+    root.innerHTML = '<div id="tc-look"></div><div id="tc-joy" class="tc-ctl" data-id="joy"><div id="tc-knob"></div></div>';
     document.body.appendChild(root);
-    function show() { root.style.display = G.state === 'playing' ? 'block' : 'none'; }
+    const bg = document.createElement('div'); bg.id = 'tc-editbg'; document.body.appendChild(bg);
+    function show() { root.style.display = (G.state === 'playing' || editing) ? 'block' : 'none'; }
     setInterval(show, 250); show();
     function press(code, on) { if (!code) return; document.dispatchEvent(new KeyboardEvent(on ? 'keydown' : 'keyup', { code: code, bubbles: true })); }
+
+    const els = { joy: $('tc-joy') };
     [['JUMP', 'jump', 'right:6vw;bottom:26vh'], ['DODGE', 'dodge', 'right:6vw;bottom:8vh'], ['RELOAD', 'reload', 'right:16vw;bottom:8vh'],
      ['NADE', 'grenade', 'right:16vw;bottom:26vh'], ['FIRE', null, 'right:26vw;bottom:14vh']].forEach(function (b) {
-      const el = document.createElement('div'); el.className = 'tc-b'; el.textContent = b[0]; el.style.cssText = b[2];
-      root.appendChild(el);
-      el.addEventListener('touchstart', function (e) { e.preventDefault(); if (b[1]) press(SET.bind[b[1]], true); else { G.fireHeld = true; G.firePressed = true; } }, { passive: false });
-      el.addEventListener('touchend', function (e) { e.preventDefault(); if (b[1]) press(SET.bind[b[1]], false); else G.fireHeld = false; }, { passive: false });
+      const el = document.createElement('div'); el.className = 'tc-b tc-ctl'; el.textContent = b[0]; el.style.cssText = b[2]; el.setAttribute('data-id', b[0]);
+      root.appendChild(el); els[b[0]] = el;
+      el.addEventListener('touchstart', function (e) { e.preventDefault(); if (editing) return; if (b[1]) press(SET.bind[b[1]], true); else { G.fireHeld = true; G.firePressed = true; } }, { passive: false });
+      el.addEventListener('touchend', function (e) { e.preventDefault(); if (editing) return; if (b[1]) press(SET.bind[b[1]], false); else G.fireHeld = false; }, { passive: false });
     });
+    els.joy.setAttribute('data-id', 'joy');
+    const base = {};                                       // original CSS positions, used by RESET
+    Object.keys(els).forEach(function (k) { base[k] = els[k].style.cssText; });
+
+    function applyLayout() {
+      root.style.setProperty('--tcs', L.scale); root.style.setProperty('--tca', L.alpha);
+      const W = window.innerWidth, H = window.innerHeight;
+      Object.keys(els).forEach(function (k) {
+        const el = els[k], p = L.pos[k];
+        if (!p) { el.style.cssText = base[k]; return; }
+        const w = el.offsetWidth || 54, h = el.offsetHeight || 54;
+        el.style.right = 'auto'; el.style.bottom = 'auto';
+        el.style.left = Math.round(clamp(p.x * W - w / 2, 0, W - w)) + 'px';
+        el.style.top = Math.round(clamp(p.y * H - h / 2, 0, H - h)) + 'px';
+      });
+    }
+    applyLayout();
+    window.addEventListener('resize', applyLayout);
+    window.addEventListener('orientationchange', function () { setTimeout(applyLayout, 300); });
+
+    // ---- edit mode: drag every control where you want it ----
+    const bar = document.createElement('div'); bar.id = 'tc-edit';
+    bar.innerHTML = '<span>Drag a button to move it</span>'
+      + '<label>Size <input id="tc-size" type="range" min="0.7" max="1.6" step="0.05"></label>'
+      + '<label>See-through <input id="tc-alpha" type="range" min="0.3" max="1" step="0.05"></label>'
+      + '<button id="tc-reset">RESET</button><button id="tc-done" class="go">DONE</button>';
+    document.body.appendChild(bar);
+    const drag = {};
+    Object.keys(els).forEach(function (k) {
+      const el = els[k];
+      el.addEventListener('touchstart', function (e) {
+        if (!editing) return; e.preventDefault(); e.stopPropagation();
+        const t = e.changedTouches[0], r = el.getBoundingClientRect();
+        drag[t.identifier] = { k: k, dx: t.clientX - (r.left + r.width / 2), dy: t.clientY - (r.top + r.height / 2) };
+      }, { passive: false });
+      el.addEventListener('touchmove', function (e) {
+        if (!editing) return; e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i], d = drag[t.identifier]; if (!d || d.k !== k) continue;
+          const W = window.innerWidth, H = window.innerHeight;
+          L.pos[k] = { x: clamp((t.clientX - d.dx) / W, 0.04, 0.96), y: clamp((t.clientY - d.dy) / H, 0.08, 0.96) };
+          applyLayout();
+        }
+      }, { passive: false });
+      const endDrag = function (e) { if (!editing) return; for (let i = 0; i < e.changedTouches.length; i++) delete drag[e.changedTouches[i].identifier]; saveL(); };
+      el.addEventListener('touchend', endDrag); el.addEventListener('touchcancel', endDrag);
+    });
+    function setEdit(on) {
+      editing = on;
+      document.body.classList.toggle('tc-editing', on);
+      $('tc-size').value = L.scale; $('tc-alpha').value = L.alpha;
+      show(); applyLayout();
+    }
+    $('tc-size').addEventListener('input', function () { L.scale = parseFloat(this.value) || 1; applyLayout(); saveL(); });
+    $('tc-alpha').addEventListener('input', function () { L.alpha = parseFloat(this.value) || 1; applyLayout(); saveL(); });
+    $('tc-reset').addEventListener('click', function () { L = { pos: {}, scale: 1, alpha: 1 }; $('tc-size').value = 1; $('tc-alpha').value = 1; applyLayout(); saveL(); });
+    $('tc-done').addEventListener('click', function () { setEdit(false); saveL(); $('settings').classList.remove('hidden'); renderSettings(); });
+    TCAPI = { edit: function () { $('settings').classList.add('hidden'); setEdit(true); } };
+
     const joy = $('tc-joy'), knob = $('tc-knob'); let jid = null;
     function jmove(t) {
-      const r = joy.getBoundingClientRect(), dx = t.clientX - (r.left + 65), dy = t.clientY - (r.top + 65), m = Math.min(1, Math.hypot(dx, dy) / 60), a = Math.atan2(dy, dx);
+      const r = joy.getBoundingClientRect(), dx = t.clientX - (r.left + r.width / 2), dy = t.clientY - (r.top + r.height / 2), m = Math.min(1, Math.hypot(dx, dy) / (r.width * 0.46)), a = Math.atan2(dy, dx);
       const x = Math.cos(a) * m, y = Math.sin(a) * m;
       knob.style.transform = 'translate(' + x * 40 + 'px,' + y * 40 + 'px)';
       keys[SET.bind.left] = x < -0.3; keys[SET.bind.right] = x > 0.3; keys[SET.bind.forward] = y < -0.3; keys[SET.bind.back] = y > 0.3;
       keys[SET.bind.sprint] = y < -0.9;
     }
     function jend() { jid = null; knob.style.transform = ''; [SET.bind.left, SET.bind.right, SET.bind.forward, SET.bind.back, SET.bind.sprint].forEach(function (k) { keys[k] = false; }); }
-    joy.addEventListener('touchstart', function (e) { e.preventDefault(); jid = e.changedTouches[0].identifier; jmove(e.changedTouches[0]); }, { passive: false });
-    joy.addEventListener('touchmove', function (e) { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === jid) jmove(t); }, { passive: false });
+    joy.addEventListener('touchstart', function (e) { if (editing) return; e.preventDefault(); jid = e.changedTouches[0].identifier; jmove(e.changedTouches[0]); }, { passive: false });
+    joy.addEventListener('touchmove', function (e) { if (editing) return; e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === jid) jmove(t); }, { passive: false });
     joy.addEventListener('touchend', jend); joy.addEventListener('touchcancel', jend);
     const look = $('tc-look'); let lid = null, lx = 0, ly = 0;
     look.addEventListener('touchstart', function (e) { const t = e.changedTouches[0]; lid = t.identifier; lx = t.clientX; ly = t.clientY; e.preventDefault(); }, { passive: false });
@@ -3416,7 +3514,13 @@
       body.appendChild(mk('div', 'set-note', 'Shadows and resolution are chosen under GRAPHICS on the main menu and apply when a match starts.'));
     } else if (settingsTab === 'controls') {
       addSlider(body, TOUCH ? 'LOOK SENSITIVITY' : 'MOUSE SENSITIVITY', 0.3, 2.5, 0.1, function () { return SET.sens; }, function (v) { SET.sens = v; }, function (v) { return v.toFixed(1); });
-      if (TOUCH) { body.appendChild(mk('div', 'set-note', 'Drag the right side of the screen to look. Use the left joystick to move and the on-screen buttons to fire, jump, dodge, reload and throw.')); return; }   // phones: no keyboard key list
+      if (TOUCH) {
+        const eb = mk('button', 'btn big', 'EDIT HUD LAYOUT'); eb.style.margin = '10px 0';
+        eb.addEventListener('click', function () { if (TCAPI) TCAPI.edit(); });
+        body.appendChild(eb);
+        body.appendChild(mk('div', 'set-note', 'Opens an editor where you drag the joystick and the JUMP / DODGE / RELOAD / NADE / FIRE buttons anywhere you like, and change their size and see-through level. Drag the right side of the screen to look around.'));
+        return;
+      }   // phones: no keyboard key list
       ACTIONS.forEach(function (a) {
         const r = setRow(body, a[1].toUpperCase());
         const b = mk('button', 'keybtn' + (rebind === a[0] ? ' wait' : ''), rebind === a[0] ? 'PRESS A KEY...' : keyName(SET.bind[a[0]]));
