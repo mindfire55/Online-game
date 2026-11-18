@@ -3415,7 +3415,8 @@
       body.appendChild(mk('div', 'set-note', 'Off = no particles, tracers, blood, decals or muzzle flash.  Normal = standard effects.  High = more blood and sparks, muzzle smoke, ejected shells, tracers, headshot ring flash, camera shake and slow-motion headshot kills.  Ultra = the most particles, extra smoke and stronger flashes. Weather, clouds and grading can be turned off separately if the game runs slowly.'));
       body.appendChild(mk('div', 'set-note', 'Shadows and resolution are chosen under GRAPHICS on the main menu and apply when a match starts.'));
     } else if (settingsTab === 'controls') {
-      addSlider(body, 'MOUSE SENSITIVITY', 0.3, 2.5, 0.1, function () { return SET.sens; }, function (v) { SET.sens = v; }, function (v) { return v.toFixed(1); });
+      addSlider(body, TOUCH ? 'LOOK SENSITIVITY' : 'MOUSE SENSITIVITY', 0.3, 2.5, 0.1, function () { return SET.sens; }, function (v) { SET.sens = v; }, function (v) { return v.toFixed(1); });
+      if (TOUCH) { body.appendChild(mk('div', 'set-note', 'Drag the right side of the screen to look. Use the left joystick to move and the on-screen buttons to fire, jump, dodge, reload and throw.')); return; }   // phones: no keyboard key list
       ACTIONS.forEach(function (a) {
         const r = setRow(body, a[1].toUpperCase());
         const b = mk('button', 'keybtn' + (rebind === a[0] ? ' wait' : ''), rebind === a[0] ? 'PRESS A KEY...' : keyName(SET.bind[a[0]]));
